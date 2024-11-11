@@ -169,7 +169,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):  # pylint: disable=hass-enf
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
     @property
-    def vacuum_state(self) -> VacuumActivity:
+    def activity(self) -> VacuumActivity:
         """Return the state of the vacuum cleaner."""
         return self._robot_state
 
