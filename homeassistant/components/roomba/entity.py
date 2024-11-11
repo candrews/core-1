@@ -8,8 +8,8 @@ import logging
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
-    VacuumState,
 )
 from homeassistant.const import ATTR_CONNECTIONS
 import homeassistant.helpers.device_registry as dr
@@ -43,16 +43,16 @@ SUPPORT_IROBOT = (
 )
 
 STATE_MAP = {
-    "": VacuumState.IDLE,
-    "charge": VacuumState.DOCKED,
-    "evac": VacuumState.RETURNING,  # Emptying at cleanbase
-    "hmMidMsn": VacuumState.CLEANING,  # Recharging at the middle of a cycle
-    "hmPostMsn": VacuumState.RETURNING,  # Cycle finished
-    "hmUsrDock": VacuumState.RETURNING,
-    "pause": VacuumState.PAUSED,
-    "run": VacuumState.CLEANING,
-    "stop": VacuumState.IDLE,
-    "stuck": VacuumState.ERROR,
+    "": VacuumActivity.IDLE,
+    "charge": VacuumActivity.DOCKED,
+    "evac": VacuumActivity.RETURNING,  # Emptying at cleanbase
+    "hmMidMsn": VacuumActivity.CLEANING,  # Recharging at the middle of a cycle
+    "hmPostMsn": VacuumActivity.RETURNING,  # Cycle finished
+    "hmUsrDock": VacuumActivity.RETURNING,
+    "pause": VacuumActivity.PAUSED,
+    "run": VacuumActivity.CLEANING,
+    "stop": VacuumActivity.IDLE,
+    "stuck": VacuumActivity.ERROR,
 }
 
 
@@ -125,7 +125,7 @@ class IRobotEntity(Entity):
         return dt_util.utc_from_timestamp(ts)
 
     @property
-    def _robot_state(self) -> VacuumState:
+    def _robot_state(self) -> VacuumActivity:
         """Return the state of the vacuum cleaner."""
         clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
         cycle = clean_mission_status.get("cycle")
@@ -133,12 +133,12 @@ class IRobotEntity(Entity):
         try:
             state = STATE_MAP[phase]
         except KeyError:
-            return VacuumState.ERROR
+            return VacuumActivity.ERROR
         if cycle != "none" and state in (
-            VacuumState.IDLE,
-            VacuumState.DOCKED,
+            VacuumActivity.IDLE,
+            VacuumActivity.DOCKED,
         ):
-            state = VacuumState.PAUSED
+            state = VacuumActivity.PAUSED
         return state
 
     async def async_added_to_hass(self):
@@ -169,7 +169,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):  # pylint: disable=hass-enf
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
     @property
-    def vacuum_state(self) -> VacuumState:
+    def vacuum_state(self) -> VacuumActivity:
         """Return the state of the vacuum cleaner."""
         return self._robot_state
 
@@ -189,7 +189,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):  # pylint: disable=hass-enf
 
         # Only add cleaning time and cleaned area attrs when the vacuum is
         # currently on
-        if self.state == VacuumState.CLEANING:
+        if self.state == VacuumActivity.CLEANING:
             # Get clean mission status
             (
                 state_attrs[ATTR_CLEANING_TIME],
@@ -243,7 +243,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):  # pylint: disable=hass-enf
 
     async def async_start(self):
         """Start or resume the cleaning task."""
-        if self.vacuum_state == VacuumState.PAUSED:
+        if self.vacuum_state == VacuumActivity.PAUSED:
             await self.hass.async_add_executor_job(self.vacuum.send_command, "resume")
         else:
             await self.hass.async_add_executor_job(self.vacuum.send_command, "start")
@@ -258,10 +258,10 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):  # pylint: disable=hass-enf
 
     async def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
-        if self.vacuum_state == VacuumState.CLEANING:
+        if self.vacuum_state == VacuumActivity.CLEANING:
             await self.async_pause()
             for _ in range(10):
-                if self.state == VacuumState.PAUSED:
+                if self.state == VacuumActivity.PAUSED:
                     break
                 await asyncio.sleep(1)
         await self.hass.async_add_executor_job(self.vacuum.send_command, "dock")
