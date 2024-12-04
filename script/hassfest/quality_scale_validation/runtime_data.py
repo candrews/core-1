@@ -65,7 +65,7 @@ def _check_function_annotation(
         and isinstance(annotation, ast.Name)
         and _ANNOTATION_MATCH.match(annotation.id)
     ):
-        return f"+[strict-typing] {function.name} does not use typed ConfigEntry"
+        return f"([+ strict-typing]) {function.name} does not use typed ConfigEntry"
     return None
 
 
