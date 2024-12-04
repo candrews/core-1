@@ -32,7 +32,7 @@ rules:
   test-before-setup:
     status: exempt
     comment: >
-      We choose to early exit the entry as it can take some time for the client 
+      We choose to early exit the entry as it can take some time for the client
       to connect. Waiting for the client would increase the overall setup time.
   unique-config-entry: done
 
