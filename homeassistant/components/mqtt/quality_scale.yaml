@@ -29,7 +29,7 @@ rules:
       MQTT broker, this happens during integration setup,
       and only one config entry is allowed.
   test-before-configure: done
-  test-before-setup: done
+  test-before-setup: todo
   unique-config-entry: done
 
   # Silver
