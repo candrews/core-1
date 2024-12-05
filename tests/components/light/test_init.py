@@ -1359,7 +1359,7 @@ async def test_light_state_off(hass: HomeAssistant) -> None:
         "color_mode": None,
         "friendly_name": "Test_onoff",
         "supported_color_modes": [light.ColorMode.ONOFF],
-        "supported_features": 0,
+        "supported_features": light.LightEntityFeature(0),
     }
 
     state = hass.states.get(entity1.entity_id)
@@ -1367,7 +1367,7 @@ async def test_light_state_off(hass: HomeAssistant) -> None:
         "color_mode": None,
         "friendly_name": "Test_brightness",
         "supported_color_modes": [light.ColorMode.BRIGHTNESS],
-        "supported_features": 0,
+        "supported_features": light.LightEntityFeature(0),
         "brightness": None,
     }
 
@@ -1376,7 +1376,7 @@ async def test_light_state_off(hass: HomeAssistant) -> None:
         "color_mode": None,
         "friendly_name": "Test_ct",
         "supported_color_modes": [light.ColorMode.COLOR_TEMP],
-        "supported_features": 0,
+        "supported_features": light.LightEntityFeature(0),
         "brightness": None,
         "color_temp": None,
         "color_temp_kelvin": None,
@@ -1394,7 +1394,7 @@ async def test_light_state_off(hass: HomeAssistant) -> None:
         "color_mode": None,
         "friendly_name": "Test_rgbw",
         "supported_color_modes": [light.ColorMode.RGBW],
-        "supported_features": 0,
+        "supported_features": light.LightEntityFeature(0),
         "brightness": None,
         "rgbw_color": None,
         "hs_color": None,
@@ -1425,7 +1425,7 @@ async def test_light_state_rgbw(hass: HomeAssistant) -> None:
         "color_mode": light.ColorMode.RGBW,
         "friendly_name": "Test_rgbw",
         "supported_color_modes": [light.ColorMode.RGBW],
-        "supported_features": 0,
+        "supported_features": light.LightEntityFeature(0),
         "hs_color": (240.0, 25.0),
         "rgb_color": (3, 3, 4),
         "rgbw_color": (1, 2, 3, 4),
@@ -1456,7 +1456,7 @@ async def test_light_state_rgbww(hass: HomeAssistant) -> None:
         "color_mode": light.ColorMode.RGBWW,
         "friendly_name": "Test_rgbww",
         "supported_color_modes": [light.ColorMode.RGBWW],
-        "supported_features": 0,
+        "supported_features": light.LightEntityFeature(0),
         "hs_color": (60.0, 20.0),
         "rgb_color": (5, 5, 4),
         "rgbww_color": (1, 2, 3, 4, 5),
@@ -2619,27 +2619,6 @@ def test_filter_supported_color_modes() -> None:
     # ColorMode.BRIGHTNESS has priority over ColorMode.ONOFF
     supported = {light.ColorMode.ONOFF, light.ColorMode.BRIGHTNESS}
     assert light.filter_supported_color_modes(supported) == {light.ColorMode.BRIGHTNESS}
-
-
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockLightEntityEntity(light.LightEntity):
-        @property
-        def supported_features(self) -> int:
-            """Return supported features."""
-            return 1
-
-    entity = MockLightEntityEntity()
-    assert entity.supported_features_compat is light.LightEntityFeature(1)
-    assert "MockLightEntityEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "LightEntityFeature" in caplog.text
-    assert "and color modes" in caplog.text
-    caplog.clear()
-    assert entity.supported_features_compat is light.LightEntityFeature(1)
-    assert "is using deprecated supported features values" not in caplog.text
 
 
 @pytest.mark.parametrize(
